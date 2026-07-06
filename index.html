@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VCR REC. TIMER</title>
+    <style>
+        /* 폰트 설정 (지정된 경로) */
+        @font-face {
+            font-family: 'VCR_OSD_MONO';
+            src: url('./fonts/VCR_OSD_MONO.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --vcr-green: #00FF00;
+            --vcr-red: #FF0000;
+            --vcr-blue: #0000AA; /* 옛날 VCR 블루스크린 색상 */
+            --vcr-white: #E0E0E0;
+            --bg-color: #050505;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--vcr-white);
+            font-family: 'VCR_OSD_MONO', monospace, sans-serif;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        /* CRT 화면 효과 */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* 화면 글리치 (전환 시) */
+        .glitch-active {
+            animation: crtGlitch 0.3s ease-out;
+        }
+
+        @keyframes crtGlitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-5px, 5px) }
+            40% { transform: translate(-5px, -5px) }
+            60% { transform: translate(5px, 5px) }
+            80% { transform: translate(5px, -5px) }
+            100% { transform: translate(0) }
+        }
+
+        /* 텍스트 효과 */
+        .vcr-text {
+            text-shadow: 2px 2px 0px #000, 0 0 5px rgba(255,255,255,0.5);
+        }
+        .text-red { color: var(--vcr-red); text-shadow: 2px 2px 0px #000, 0 0 5px rgba(255,0,0,0.8); }
+        .text-green { color: var(--vcr-green); text-shadow: 2px 2px 0px #000, 0 0 5px rgba(0,255,0,0.8); }
+        .blink { animation: blinker 1s linear infinite; }
+        .blink-fast { animation: blinker 0.3s linear infinite; }
+        
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        /* 스크린 레이아웃 */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            z-index: 10;
+        }
+        .screen.active {
+            display: flex;
+        }
+
+        /* 타이틀 화면 */
+        #screen-title {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+        }
+        .title-logo { font-size: 2.5rem; margin-bottom: 20px; }
+
+        /* 공통 헤더/푸터 */
+        .header { display: flex; justify-content: space-between; font-size: 1.2rem; margin-bottom: 20px; }
+        .footer { margin-top: auto; display: flex; justify-content: space-between; font-size: 1rem; }
+
+        /* 리스트 스타일 (채널, 로그) */
+        .list-container { flex-grow: 1; overflow-y: auto; overflow-x: hidden; margin-bottom: 15px; }
+        .list-item {
+            padding: 15px;
+            border: 2px solid var(--vcr-white);
+            margin-bottom: 10px;
+            cursor: pointer;
+            background: rgba(0,0,0,0.5);
+        }
+        .list-item:active { background: var(--vcr-white); color: #000; }
+        
+        /* 버튼 */
+        .btn {
+            background: transparent;
+            border: 2px solid var(--vcr-white);
+            color: var(--vcr-white);
+            font-family: inherit;
+            font-size: 1rem;
+            padding: 10px 15px;
+            cursor: pointer;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 0px #000;
+        }
+        .btn:active { background: var(--vcr-white); color: #000; }
+
+        /* 폼 입력 (커스텀 빌더) */
+        .input-group { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .input-box {
+            background: transparent;
+            border: 2px solid var(--vcr-white);
+            color: var(--vcr-green);
+            font-family: inherit;
+            font-size: 1.2rem;
+            width: 80px;
+            text-align: center;
+            padding: 5px;
+        }
+        .input-text { width: 100%; text-align: left; margin-bottom: 10px; }
+        
+        /* 태그 빌더 */
+        .tag-list { min-height: 100px; border: 1px dashed var(--vcr-white); padding: 10px; margin-bottom: 15px; }
+        .tag-item {
+            display: flex; justify-content: space-between; align-items: center;
+            border: 2px solid var(--vcr-white); padding: 8px; margin-bottom: 5px;
+            background: #111;
+        }
+        .tag-actions span { margin-left: 10px; padding: 5px; cursor: pointer; color: var(--vcr-green); }
+        .tag-actions .del { color: var(--vcr-red); }
+
+        /* 타이머 화면 (뷰파인더) */
+        #screen-timer.blue-screen { background-color: var(--vcr-blue); }
+        .timer-bg-gif {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            min-width: 100%; min-height: 100%; opacity: 0.4; object-fit: cover; z-index: -1;
+        }
+        .timer-status { font-size: 1.5rem; display: flex; justify-content: space-between; margin-bottom: 30px;}
+        .timer-center { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .timer-time { font-size: 6rem; font-weight: bold; }
+        .timer-round { font-size: 1.5rem; margin-bottom: 10px; color: var(--vcr-green); }
+        .timer-caption {
+            background: rgba(0,0,0,0.7); border: 2px solid var(--vcr-white);
+            padding: 15px; text-align: center; font-size: 1.2rem; margin-bottom: 20px;
+        }
+
+        /* 로그 화면 텍스트 영역 */
+        #log-textarea {
+            width: 100%; height: 200px; background: #000; color: var(--vcr-green);
+            border: 2px solid var(--vcr-white); font-family: inherit; font-size: 0.8rem;
+            padding: 10px; margin-bottom: 10px; resize: none;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <!-- CRT 스캔라인 오버레이 -->
+    <div class="crt-overlay"></div>
+
+    <!-- 1. 타이틀 화면 -->
+    <div id="screen-title" class="screen active" onclick="app.playSound('coin'); app.switchScreen('menu')">
+        <div class="title-logo vcr-text">VCR REC.<br>INTERVAL TIMER</div>
+        <div class="blink text-green" style="font-size: 1.5rem; margin-top: 50px;">INSERT COIN<br>(TAP TO START)</div>
+    </div>
+
+    <!-- 2. 채널 선택 화면 -->
+    <div id="screen-menu" class="screen">
+        <div class="header">
+            <span>TRACK LIST</span>
+            <span id="menu-time">12:00:00</span>
+        </div>
+        <div class="list-container" id="channel-list">
+            <!-- JS로 채널 목록 렌더링 -->
+        </div>
+        <div class="footer">
+            <button class="btn" onclick="app.switchScreen('builder')">+ NEW TRACK</button>
+            <button class="btn" onclick="app.switchScreen('log')">TAPE LOG</button>
+        </div>
+    </div>
+
+    <!-- 3. 커스텀 채널 생성 화면 -->
+    <div id="screen-builder" class="screen">
+        <div class="header"><span>CH SELECT: NEW</span></div>
+        <div class="list-container">
+            <div class="input-group">
+                <span>TRACK NAME:</span>
+                <input type="text" id="build-name" class="input-box input-text" style="width:150px" value="MY ROUTINE">
+            </div>
+            <div class="input-group">
+                <span>WORK (SEC):</span>
+                <input type="number" id="build-work" class="input-box" value="45">
+            </div>
+            <div class="input-group">
+                <span>REST (SEC):</span>
+                <input type="number" id="build-rest" class="input-box" value="15">
+            </div>
+            <div class="input-group">
+                <span>SETS:</span>
+                <input type="number" id="build-sets" class="input-box" value="5">
+            </div>
+            
+            <div style="margin-top:20px; margin-bottom:10px;">EXERCISE TAGS:</div>
+            <div class="input-group">
+                <input type="text" id="build-tag-input" class="input-box input-text" style="width: 70%;" placeholder="EX: PUSH UP">
+                <button class="btn" onclick="app.addTag()">ADD</button>
+            </div>
+            <div class="tag-list" id="build-tag-list">
+                <!-- JS로 태그 렌더링 -->
+            </div>
+        </div>
+        <div class="footer">
+            <button class="btn text-red" onclick="app.switchScreen('menu')">CANCEL</button>
+            <button class="btn text-green" onclick="app.saveCustomChannel()">SAVE TO TAPE</button>
+        </div>
+    </div>
+
+    <!-- 4. 타이머 화면 (뷰파인더) -->
+    <div id="screen-timer" class="screen" onclick="app.togglePause()">
+        <img id="timer-gif" class="timer-bg-gif" src="" alt="">
+        <div class="timer-status">
+            <span id="timer-indicator" class="text-red blink">● REC</span>
+            <span id="timer-battery">[||||]</span>
+        </div>
+        <div class="timer-center">
+            <div id="timer-round" class="timer-round">ROUND 01/05</div>
+            <div id="timer-time" class="timer-time vcr-text">00:45</div>
+            <div id="timer-state-text" style="margin-top: 10px; font-size: 1.5rem;" class="text-red">WORK</div>
+        </div>
+        <div class="timer-caption">
+            <div id="timer-caption-current" class="vcr-text">[ CURRENT EXERCISE ]</div>
+            <div id="timer-caption-next" style="font-size: 0.9rem; margin-top: 5px; color: var(--vcr-green);">NEXT: NONE</div>
+        </div>
+    </div>
+
+    <!-- 5. 로그 기록 화면 -->
+    <div id="screen-log" class="screen">
+        <div class="header"><span>TAPE LOG ARCHIVE</span></div>
+        <textarea id="log-textarea" readonly></textarea>
+        <div style="font-size: 0.8rem; margin-bottom: 10px; text-align: center;">COPY TO BACKUP / PASTE TO RESTORE</div>
+        <div class="footer">
+            <button class="btn" onclick="app.switchScreen('menu')">BACK</button>
+            <button class="btn text-green" onclick="app.importData()">RESTORE</button>
+        </div>
+    </div>
+
+    <!-- 어플리케이션 스크립트 -->
+    <script>
+        const app = {
+            // 사운드 파일 경로 (설정된 폴더 기준)
+            sfx: {
+                coin: new Audio('./soundfx/coin.mp3'),
+                count: new Audio('./soundfx/countdown.mp3'),
+                start: new Audio('./soundfx/start.mp3'),
+                rest: new Audio('./soundfx/rest.mp3'),
+                complete: new Audio('./soundfx/complete.mp3')
+            },
+            
+            // 기본 제공 프로그램 (프리셋)
+            defaultChannels: [
+                { id: "CH01", type: "preset", name: "TABATA BASIC", work: 20, rest: 10, sets: 8, gif: "./gif/ch01.gif", playlist: ["FULL BODY BURST"] },
+                { id: "CH02", type: "preset", name: "HEAVY JUMP ROPE", work: 60, rest: 30, sets: 10, gif: "./gif/ch02.gif", playlist: ["JUMP ROPE"] },
+                { id: "CH03", type: "preset", name: "BOXING ROUND", work: 180, rest: 60, sets: 12, gif: "./gif/ch03.gif", playlist: ["SHADOW BOXING"] }
+            ],
+            
+            data: {
+                customChannels: [],
+                logs: [],
+                builderTags: []
+            },
+
+            // 타이머 상태 관리
+            timer: {
+                intervalId: null,
+                targetTime: 0,
+                remainingSec: 0,
+                currentRound: 1,
+                state: 'WORK', // 'WORK', 'REST', 'PAUSED'
+                isPaused: false,
+                activeChannel: null
+            },
+
+            init() {
+                this.loadData();
+                this.updateClock();
+                setInterval(() => this.updateClock(), 1000);
+            },
+
+            // 효과음 재생 함수 (에러 처리 포함)
+            playSound(soundName) {
+                try {
+                    const sound = this.sfx[soundName];
+                    sound.currentTime = 0;
+                    sound.play().catch(e => console.log("Sound play prevented by browser:", e));
+                } catch(e) {}
+            },
+
+            triggerGlitch() {
+                document.body.classList.remove('glitch-active');
+                void document.body.offsetWidth; // 트리거 리셋
+                document.body.classList.add('glitch-active');
+            },
+
+            switchScreen(screenName) {
+                this.triggerGlitch();
+                document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+                document.getElementById(`screen-${screenName}`).classList.add('active');
+
+                if (screenName === 'menu') this.renderMenu();
+                if (screenName === 'builder') {
+                    this.data.builderTags = [];
+                    this.renderTags();
+                }
+                if (screenName === 'log') this.renderLog();
+            },
+
+            updateClock() {
+                const now = new Date();
+                const timeStr = now.toTimeString().split(' ')[0];
+                const menuTime = document.getElementById('menu-time');
+                if(menuTime) menuTime.innerText = timeStr;
+            },
+
+            // 로컬 스토리지 데이터 관리
+            loadData() {
+                const saved = localStorage.getItem('vcr_timer_data');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        this.data.customChannels = parsed.customChannels || [];
+                        this.data.logs = parsed.logs || [];
+                    } catch(e) { console.error("Data load error", e); }
+                }
+            },
+            saveData() {
+                localStorage.setItem('vcr_timer_data', JSON.stringify({
+                    customChannels: this.data.customChannels,
+                    logs: this.data.logs
+                }));
+            },
+
+            // 메뉴 렌더링
+            renderMenu() {
+                const list = document.getElementById('channel-list');
+                list.innerHTML = '';
+                
+                const allChannels = [...this.defaultChannels, ...this.data.customChannels];
+                
+                allChannels.forEach((ch, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    const chId = (index + 1).toString().padStart(2, '0');
+                    item.innerHTML = `CH ${chId}: ${ch.name} <br><span style="font-size:0.8rem; color:var(--vcr-green)">WORK:${ch.work}s | REST:${ch.rest}s | ${ch.sets} SETS</span>`;
+                    item.onclick = () => {
+                        this.playSound('coin');
+                        this.startTimerPrep(ch);
+                    };
+                    list.appendChild(item);
+                });
+            },
+
+            // --- 커스텀 채널 빌더 기능 ---
+            addTag() {
+                const input = document.getElementById('build-tag-input');
+                const val = input.value.trim().toUpperCase();
+                if(val) {
+                    this.data.builderTags.push(val);
+                    input.value = '';
+                    this.renderTags();
+                }
+            },
+            removeTag(index) {
+                this.data.builderTags.splice(index, 1);
+                this.renderTags();
+            },
+            moveTag(index, dir) {
+                if(index + dir < 0 || index + dir >= this.data.builderTags.length) return;
+                const temp = this.data.builderTags[index];
+                this.data.builderTags[index] = this.data.builderTags[index + dir];
+                this.data.builderTags[index + dir] = temp;
+                this.renderTags();
+            },
+            renderTags() {
+                const list = document.getElementById('build-tag-list');
+                list.innerHTML = '';
+                this.data.builderTags.forEach((tag, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'tag-item';
+                    item.innerHTML = `
+                        <span>[${(idx+1).toString().padStart(2,'0')}] ${tag}</span>
+                        <div class="tag-actions">
+                            <span onclick="app.moveTag(${idx}, -1)">▲</span>
+                            <span onclick="app.moveTag(${idx}, 1)">▼</span>
+                            <span class="del" onclick="app.removeTag(${idx})">[X]</span>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            },
+            saveCustomChannel() {
+                const name = document.getElementById('build-name').value.trim() || 'MY ROUTINE';
+                const work = parseInt(document.getElementById('build-work').value) || 45;
+                const rest = parseInt(document.getElementById('build-rest').value) || 15;
+                const sets = parseInt(document.getElementById('build-sets').value) || 5;
+                const playlist = this.data.builderTags.length > 0 ? this.data.builderTags : ['CUSTOM WORKOUT'];
+
+                const newCh = {
+                    id: "CUST_" + Date.now(),
+                    type: "custom",
+                    name: name,
+                    work: work,
+                    rest: rest,
+                    sets: sets,
+                    gif: "./gif/default_custom.gif", // 커스텀용 기본 GIF 경로
+                    playlist: playlist
+                };
+
+                this.data.customChannels.push(newCh);
+                this.saveData();
+                this.switchScreen('menu');
+            },
+
+            // --- 타이머 로직 ---
+            startTimerPrep(channel) {
+                this.timer.activeChannel = channel;
+                this.timer.currentRound = 1;
+                this.timer.isPaused = false;
+                this.setTimerState('WORK');
+                this.switchScreen('timer');
+                
+                // GIF 소스 세팅 (에러 시 빈 이미지 처리)
+                const gifEl = document.getElementById('timer-gif');
+                gifEl.src = channel.gif;
+                gifEl.onerror = () => { gifEl.style.display = 'none'; };
+                
+                this.timerLoop();
+            },
+
+            setTimerState(newState) {
+                this.timer.state = newState;
+                const ch = this.timer.activeChannel;
+                const screen = document.getElementById('screen-timer');
+                const indicator = document.getElementById('timer-indicator');
+                const stateText = document.getElementById('timer-state-text');
+                const timeEl = document.getElementById('timer-time');
+                const gifEl = document.getElementById('timer-gif');
+
+                this.triggerGlitch();
+
+                if (newState === 'WORK') {
+                    this.playSound('start');
+                    this.timer.remainingSec = ch.work;
+                    screen.classList.remove('blue-screen');
+                    gifEl.style.display = 'block';
+                    
+                    indicator.className = 'text-red blink';
+                    indicator.innerText = '● REC';
+                    stateText.className = 'text-red';
+                    stateText.innerText = 'WORK';
+                    timeEl.className = 'timer-time vcr-text text-red';
+                    
+                } else if (newState === 'REST') {
+                    this.playSound('rest');
+                    this.timer.remainingSec = ch.rest;
+                    screen.classList.add('blue-screen');
+                    gifEl.style.display = 'none'; // 블루스크린
+                    
+                    indicator.className = 'text-green';
+                    indicator.innerText = '|| PAUSE';
+                    stateText.className = 'text-green';
+                    stateText.innerText = 'REST';
+                    timeEl.className = 'timer-time vcr-text text-green';
+                }
+                
+                this.timer.targetTime = Date.now() + (this.timer.remainingSec * 1000);
+                this.updateTimerUI();
+            },
+
+            updateTimerUI() {
+                const timeEl = document.getElementById('timer-time');
+                const roundEl = document.getElementById('timer-round');
+                const capCurrent = document.getElementById('timer-caption-current');
+                const capNext = document.getElementById('timer-caption-next');
+                const ch = this.timer.activeChannel;
+
+                // 시간 포맷팅
+                const m = Math.floor(this.timer.remainingSec / 60).toString().padStart(2, '0');
+                const s = (this.timer.remainingSec % 60).toString().padStart(2, '0');
+                timeEl.innerText = `${m}:${s}`;
+                
+                // 라운드 텍스트
+                if(this.timer.currentRound === ch.sets && this.timer.state === 'WORK') {
+                    roundEl.innerText = 'FINAL ROUND';
+                    roundEl.className = 'timer-round text-red blink-fast';
+                } else {
+                    roundEl.innerText = `ROUND ${this.timer.currentRound.toString().padStart(2,'0')} / ${ch.sets.toString().padStart(2,'0')}`;
+                    roundEl.className = 'timer-round text-green';
+                }
+
+                // 캡션 (자막) 처리 - 순환 구조
+                const pList = ch.playlist;
+                const currentEx = pList[(this.timer.currentRound - 1) % pList.length];
+                let nextEx = "NONE";
+                if(this.timer.currentRound < ch.sets) {
+                    nextEx = pList[this.timer.currentRound % pList.length];
+                }
+
+                if(this.timer.state === 'WORK') {
+                    capCurrent.innerText = `[ DOING ] ${currentEx}`;
+                    capNext.innerText = `NEXT: ${nextEx}`;
+                } else {
+                    capCurrent.innerText = `[ RESTING ]`;
+                    capNext.innerText = `NEXT UP: ${currentEx}`; // 휴식 중엔 다음 할 운동이 current
+                }
+            },
+
+            timerLoop() {
+                if(this.timer.intervalId) clearInterval(this.timer.intervalId);
+                
+                this.timer.intervalId = setInterval(() => {
+                    if(this.timer.isPaused) {
+                        this.timer.targetTime = Date.now() + (this.timer.remainingSec * 1000); // 정지 중 시간 밀기
+                        return;
+                    }
+
+                    const now = Date.now();
+                    this.timer.remainingSec = Math.ceil((this.timer.targetTime - now) / 1000);
+
+                    // 3초 카운트다운 사운드
+                    if(this.timer.remainingSec > 0 && this.timer.remainingSec <= 3 && this.timer.state === 'REST') {
+                         this.playSound('count');
+                    }
+
+                    if (this.timer.remainingSec <= 0) {
+                        this.timer.remainingSec = 0;
+                        this.handlePhaseEnd();
+                    }
+                    this.updateTimerUI();
+                }, 1000);
+            },
+
+            handlePhaseEnd() {
+                const ch = this.timer.activeChannel;
+                
+                if (this.timer.state === 'WORK') {
+                    if (this.timer.currentRound >= ch.sets) {
+                        this.completeWorkout();
+                    } else {
+                        this.setTimerState('REST');
+                    }
+                } else if (this.timer.state === 'REST') {
+                    this.timer.currentRound++;
+                    this.setTimerState('WORK');
+                }
+            },
+
+            togglePause() {
+                this.timer.isPaused = !this.timer.isPaused;
+                const indicator = document.getElementById('timer-indicator');
+                
+                if(this.timer.isPaused) {
+                    this.triggerGlitch();
+                    indicator.innerText = 'STILL';
+                    indicator.classList.remove('blink');
+                    document.getElementById('screen-timer').classList.add('blue-screen'); // 정지시 블루스크린
+                    document.getElementById('timer-gif').style.display = 'none';
+                } else {
+                    this.triggerGlitch();
+                    // 재개 시 상태 원상복구
+                    if(this.timer.state === 'WORK') {
+                        indicator.innerText = '● REC';
+                        indicator.classList.add('blink');
+                        document.getElementById('screen-timer').classList.remove('blue-screen');
+                        document.getElementById('timer-gif').style.display = 'block';
+                    } else {
+                        indicator.innerText = '|| PAUSE';
+                    }
+                }
+            },
+
+            completeWorkout() {
+                clearInterval(this.timer.intervalId);
+                this.playSound('complete');
+                
+                // 타임스탬프 기록 저장
+                const now = new Date();
+                const dateStr = `${now.getFullYear()}.${(now.getMonth()+1).toString().padStart(2,'0')}.${now.getDate().toString().padStart(2,'0')} ${now.toTimeString().split(' ')[0]}`;
+                const chName = this.timer.activeChannel.name;
+                const logEntry = `SP ${dateStr} | ${chName} | REC COMPLETE`;
+                
+                this.data.logs.unshift(logEntry);
+                if(this.data.logs.length > 50) this.data.logs.pop(); // 최대 50개 유지
+                
+                this.saveData();
+                alert('ALL STAGES CLEAR! RECORD SAVED TO TAPE.');
+                this.switchScreen('log');
+            },
+
+            // --- 로그 아카이브 및 데이터 백업/복구 ---
+            renderLog() {
+                const ta = document.getElementById('log-textarea');
+                let content = "[TAPE LOG ARCHIVE]\n-----------------------------------------\n";
+                if(this.data.logs.length === 0) {
+                    content += "NO RECORDS FOUND.\n";
+                } else {
+                    this.data.logs.forEach(log => {
+                        content += log + "\n";
+                    });
+                }
+                content += "-----------------------------------------\n";
+                content += "[CUSTOM CHANNELS DATA]\n";
+                content += JSON.stringify(this.data.customChannels, null, 2);
+                
+                ta.value = content;
+            },
+
+            importData() {
+                const ta = document.getElementById('log-textarea');
+                const content = ta.value;
+                try {
+                    // 데이터 부분만 추출하여 파싱 (간단한 구현)
+                    const jsonStr = content.split('[CUSTOM CHANNELS DATA]\n')[1];
+                    if(jsonStr) {
+                        const parsed = JSON.parse(jsonStr);
+                        if(Array.isArray(parsed)) {
+                            this.data.customChannels = parsed;
+                            this.saveData();
+                            alert('DATA RESTORED SUCCESSFULLY.');
+                            this.switchScreen('menu');
+                            return;
+                        }
+                    }
+                    throw new Error("Invalid format");
+                } catch(e) {
+                    alert('ERROR: CANNOT READ TAPE DATA.');
+                }
+            }
+        };
+
+        // 앱 초기화
+        window.onload = () => {
+            app.init();
+        };
+
+    </script>
+</body>
+</html>
