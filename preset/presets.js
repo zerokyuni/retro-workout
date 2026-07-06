@@ -37,9 +37,8 @@ window.VCR_PRESETS = [
         playlist: [
             { name: "SHADOW BOXING", gif: "./gif/boxing.gif" }
         ]
-    }
-
-    , {
+    }, 
+    {
         id: "CH04",
         type: "preset",
         name: "LEG CORE",
