@@ -171,6 +171,14 @@
             background: rgba(0,0,0,0.7); border: 2px solid var(--vcr-white);
             padding: 15px; text-align: center; font-size: 1.2rem; margin-bottom: 20px;
         }
+        
+        /* 타이머 하단 전용 버튼 (추가됨) */
+        .timer-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: auto;
+            width: 100%;
+        }
 
         /* 로그 화면 텍스트 영역 */
         #log-textarea {
@@ -229,9 +237,12 @@
             </div>
             
             <div style="margin-top:20px; margin-bottom:10px;">EXERCISE TAGS:</div>
-            <div class="input-group">
-                <input type="text" id="build-tag-input" class="input-box input-text" style="width: 70%;" placeholder="EX: PUSH UP">
-                <button class="btn" onclick="app.addTag()">ADD</button>
+            <div class="input-group" style="flex-direction: column; align-items: stretch; gap: 5px;">
+                <input type="text" id="build-tag-input" class="input-box input-text" placeholder="EX: PUSH UP">
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="build-tag-gif" class="input-box input-text" style="flex-grow: 1; font-size: 0.9rem;" placeholder="GIF URL (OPTIONAL)">
+                    <button class="btn" onclick="app.addTag()">ADD</button>
+                </div>
             </div>
             <div class="tag-list" id="build-tag-list">
                 <!-- JS로 태그 렌더링 -->
@@ -244,7 +255,8 @@
     </div>
 
     <!-- 4. 타이머 화면 (뷰파인더) -->
-    <div id="screen-timer" class="screen" onclick="app.togglePause()">
+    <!-- (수정됨) 화면 터치 일시정지를 제거하고 하단 컨트롤 패널을 추가했습니다. -->
+    <div id="screen-timer" class="screen">
         <img id="timer-gif" class="timer-bg-gif" src="" alt="">
         <div class="timer-status">
             <span id="timer-indicator" class="text-red blink">● REC</span>
@@ -259,6 +271,12 @@
             <div id="timer-caption-current" class="vcr-text">[ CURRENT EXERCISE ]</div>
             <div id="timer-caption-next" style="font-size: 0.9rem; margin-top: 5px; color: var(--vcr-green);">NEXT: NONE</div>
         </div>
+        
+        <!-- 추가된 조작 버튼 -->
+        <div class="timer-controls">
+            <button class="btn text-red" onclick="app.stopTimer()">■ STOP</button>
+            <button class="btn text-green" id="btn-pause" onclick="app.togglePause()">|| PAUSE</button>
+        </div>
     </div>
 
     <!-- 5. 로그 기록 화면 -->
@@ -272,6 +290,9 @@
         </div>
     </div>
 
+    <!-- 외부 프리셋 데이터 불러오기 -->
+    <script src="./preset/presets.js"></script>
+
     <!-- 어플리케이션 스크립트 -->
     <script>
         const app = {
@@ -284,12 +305,11 @@
                 complete: new Audio('./soundfx/complete.mp3')
             },
             
-            // 기본 제공 프로그램 (프리셋)
-            defaultChannels: [
-                { id: "CH01", type: "preset", name: "TABATA BASIC", work: 20, rest: 10, sets: 8, gif: "./gif/ch01.gif", playlist: ["FULL BODY BURST"] },
-                { id: "CH02", type: "preset", name: "HEAVY JUMP ROPE", work: 60, rest: 30, sets: 10, gif: "./gif/ch02.gif", playlist: ["JUMP ROPE"] },
-                { id: "CH03", type: "preset", name: "BOXING ROUND", work: 180, rest: 60, sets: 12, gif: "./gif/ch03.gif", playlist: ["SHADOW BOXING"] }
-            ],
+            // 전역 기본(Fallback) GIF 설정
+            fallbackGif: "./gif/default_fallback.gif",
+
+            // preset/presets.js 파일에서 정의한 전역 변수를 프리셋으로 사용합니다.
+            defaultChannels: window.VCR_PRESETS || [],
             
             data: {
                 customChannels: [],
@@ -389,11 +409,15 @@
 
             // --- 커스텀 채널 빌더 기능 ---
             addTag() {
-                const input = document.getElementById('build-tag-input');
-                const val = input.value.trim().toUpperCase();
+                const inputName = document.getElementById('build-tag-input');
+                const inputGif = document.getElementById('build-tag-gif');
+                const val = inputName.value.trim().toUpperCase();
+                const gifVal = inputGif.value.trim();
+                
                 if(val) {
-                    this.data.builderTags.push(val);
-                    input.value = '';
+                    this.data.builderTags.push({ name: val, gif: gifVal });
+                    inputName.value = '';
+                    inputGif.value = '';
                     this.renderTags();
                 }
             },
@@ -414,8 +438,9 @@
                 this.data.builderTags.forEach((tag, idx) => {
                     const item = document.createElement('div');
                     item.className = 'tag-item';
+                    const hasGif = tag.gif ? ' <span style="color:var(--vcr-green); font-size:0.8rem;">[GIF]</span>' : '';
                     item.innerHTML = `
-                        <span>[${(idx+1).toString().padStart(2,'0')}] ${tag}</span>
+                        <span>[${(idx+1).toString().padStart(2,'0')}] ${tag.name}${hasGif}</span>
                         <div class="tag-actions">
                             <span onclick="app.moveTag(${idx}, -1)">▲</span>
                             <span onclick="app.moveTag(${idx}, 1)">▼</span>
@@ -430,7 +455,7 @@
                 const work = parseInt(document.getElementById('build-work').value) || 45;
                 const rest = parseInt(document.getElementById('build-rest').value) || 15;
                 const sets = parseInt(document.getElementById('build-sets').value) || 5;
-                const playlist = this.data.builderTags.length > 0 ? this.data.builderTags : ['CUSTOM WORKOUT'];
+                const playlist = this.data.builderTags.length > 0 ? this.data.builderTags : [{name: 'CUSTOM WORKOUT', gif: ''}];
 
                 const newCh = {
                     id: "CUST_" + Date.now(),
@@ -439,7 +464,7 @@
                     work: work,
                     rest: rest,
                     sets: sets,
-                    gif: "./gif/default_custom.gif", // 커스텀용 기본 GIF 경로
+                    gif: "", // 채널 기본 GIF는 빈값으로 처리 (Fallback 또는 개별 GIF에 의존)
                     playlist: playlist
                 };
 
@@ -453,13 +478,12 @@
                 this.timer.activeChannel = channel;
                 this.timer.currentRound = 1;
                 this.timer.isPaused = false;
+                
+                // (수정됨) 타이머 시작 시 버튼 상태 초기화
+                document.getElementById('btn-pause').innerText = '|| PAUSE';
+
                 this.setTimerState('WORK');
                 this.switchScreen('timer');
-                
-                // GIF 소스 세팅 (에러 시 빈 이미지 처리)
-                const gifEl = document.getElementById('timer-gif');
-                gifEl.src = channel.gif;
-                gifEl.onerror = () => { gifEl.style.display = 'none'; };
                 
                 this.timerLoop();
             },
@@ -479,6 +503,21 @@
                     this.playSound('start');
                     this.timer.remainingSec = ch.work;
                     screen.classList.remove('blue-screen');
+                    
+                    // 개별 운동 GIF 우선, 없으면 채널 GIF, 없으면 Fallback GIF 사용
+                    let currentEx = ch.playlist[(this.timer.currentRound - 1) % ch.playlist.length];
+                    if (typeof currentEx === 'string') currentEx = { name: currentEx, gif: '' }; // 구버전 데이터 호환
+                    
+                    const targetGifSrc = currentEx.gif || ch.gif || this.fallbackGif;
+                    gifEl.src = targetGifSrc;
+                    gifEl.onerror = () => { 
+                        // 지정된 GIF 로드 실패 시 Fallback으로 교체
+                        if (gifEl.src !== this.fallbackGif && !gifEl.src.endsWith(this.fallbackGif)) {
+                            gifEl.src = this.fallbackGif;
+                        } else {
+                            gifEl.style.display = 'none'; 
+                        }
+                    };
                     gifEl.style.display = 'block';
                     
                     indicator.className = 'text-red blink';
@@ -525,20 +564,23 @@
                     roundEl.className = 'timer-round text-green';
                 }
 
-                // 캡션 (자막) 처리 - 순환 구조
+                // 캡션 (자막) 처리 - 순환 구조 및 객체/문자열 호환
                 const pList = ch.playlist;
-                const currentEx = pList[(this.timer.currentRound - 1) % pList.length];
-                let nextEx = "NONE";
+                let currentItem = pList[(this.timer.currentRound - 1) % pList.length];
+                let currentExName = typeof currentItem === 'string' ? currentItem : currentItem.name;
+                
+                let nextExName = "NONE";
                 if(this.timer.currentRound < ch.sets) {
-                    nextEx = pList[this.timer.currentRound % pList.length];
+                    let nextItem = pList[this.timer.currentRound % pList.length];
+                    nextExName = typeof nextItem === 'string' ? nextItem : nextItem.name;
                 }
 
                 if(this.timer.state === 'WORK') {
-                    capCurrent.innerText = `[ DOING ] ${currentEx}`;
-                    capNext.innerText = `NEXT: ${nextEx}`;
+                    capCurrent.innerText = `[ DOING ] ${currentExName}`;
+                    capNext.innerText = `NEXT: ${nextExName}`;
                 } else {
                     capCurrent.innerText = `[ RESTING ]`;
-                    capNext.innerText = `NEXT UP: ${currentEx}`; // 휴식 중엔 다음 할 운동이 current
+                    capNext.innerText = `NEXT UP: ${currentExName}`; // 휴식 중엔 다음 할 운동이 current
                 }
             },
 
@@ -582,9 +624,11 @@
                 }
             },
 
+            // (수정됨) 일시정지 버튼 토글 로직
             togglePause() {
                 this.timer.isPaused = !this.timer.isPaused;
                 const indicator = document.getElementById('timer-indicator');
+                const btnPause = document.getElementById('btn-pause');
                 
                 if(this.timer.isPaused) {
                     this.triggerGlitch();
@@ -592,8 +636,11 @@
                     indicator.classList.remove('blink');
                     document.getElementById('screen-timer').classList.add('blue-screen'); // 정지시 블루스크린
                     document.getElementById('timer-gif').style.display = 'none';
+                    btnPause.innerText = '▶ PLAY';
                 } else {
                     this.triggerGlitch();
+                    btnPause.innerText = '|| PAUSE';
+                    
                     // 재개 시 상태 원상복구
                     if(this.timer.state === 'WORK') {
                         indicator.innerText = '● REC';
@@ -604,6 +651,14 @@
                         indicator.innerText = '|| PAUSE';
                     }
                 }
+            },
+            
+            // (추가됨) 수동으로 테이프를 정지(Eject)하는 기능
+            stopTimer() {
+                clearInterval(this.timer.intervalId);
+                this.timer.isPaused = false;
+                this.playSound('rest'); // 강제 종료 시 테이프가 멈추는 느낌의 사운드
+                this.switchScreen('menu'); // 채널 선택(메인) 화면으로 복귀
             },
 
             completeWorkout() {
@@ -620,7 +675,7 @@
                 if(this.data.logs.length > 50) this.data.logs.pop(); // 최대 50개 유지
                 
                 this.saveData();
-                alert('ALL STAGES CLEAR! RECORD SAVED TO TAPE.');
+                // 팝업 경고창을 표시하지 않고 자동으로 기록 화면으로 전환
                 this.switchScreen('log');
             },
 
@@ -653,14 +708,14 @@
                         if(Array.isArray(parsed)) {
                             this.data.customChannels = parsed;
                             this.saveData();
-                            alert('DATA RESTORED SUCCESSFULLY.');
                             this.switchScreen('menu');
                             return;
                         }
                     }
                     throw new Error("Invalid format");
                 } catch(e) {
-                    alert('ERROR: CANNOT READ TAPE DATA.');
+                    // 에러 발생시에는 버튼 색상을 바꾸거나 화면에 에러를 표시할 수 있습니다.
+                    console.error('ERROR: CANNOT READ TAPE DATA.');
                 }
             }
         };
