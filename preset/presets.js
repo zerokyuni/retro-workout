@@ -42,7 +42,7 @@ window.VCR_PRESETS = [
         id: "CH04",
         type: "preset",
         name: "LEG CORE",
-        work: 5,
+        work: 45,
         rest: 3,
         sets: 9,
         gif: "./gif/ch04.gif",
