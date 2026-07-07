@@ -26,7 +26,7 @@ window.VCR_PRESETS = [
         sets: 9,
         gif: "./gif/jump.rope.gif",
         playlist: [
-            { name: "WARMING UP", work: 180, rest: 5},
+            { name: "WARMING UP", gif: "./gif/default_fallback.gif", work: 180, rest: 5},
             { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
             { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
             { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
@@ -34,7 +34,7 @@ window.VCR_PRESETS = [
             { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
             { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
             { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
-            { name: "COOL DOWN", work: 300, rest: 5}
+            { name: "COOL DOWN", gif: "./gif/default_fallback.gif", work: 300, rest: 5}
         ]
     },
     {
