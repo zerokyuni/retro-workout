@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VCR REC. TIMER</title>
+    <title>WORKOUT TIMER - WORKREC.</title>
     <style>
         @font-face {
             font-family: 'VCR_OSD_MONO';
@@ -79,7 +79,7 @@
             100% { transform: translateX(-1px); filter: contrast(1.1); }
         }
 
-        /* 일시정지 특유의 가로줄 노이즈 (수정됨: 현실적인 VCR 트래킹 에러) */
+        /* 일시정지 특유의 가로줄 노이즈 (현실적인 VCR 트래킹 에러) */
         .vcr-horizontal-noise {
             display: none; position: absolute; top:0; left:0; width:100%; height:100%;
             background-image: repeating-linear-gradient(0deg, 
@@ -95,7 +95,7 @@
                 transparent 84%
             );
             background-size: 100% 150px;
-            z-index: 5; /* 텍스트 위로 노이즈가 덮이도록 상향 */
+            z-index: 5;
             pointer-events: none;
             animation: vcrHorizontalJitter 0.2s infinite steps(5); 
         }
@@ -105,7 +105,6 @@
             100% { background-position: 0 150px; }
         }
         
-        /* screen-timer 부모에 is-paused 클래스가 붙으면 가로줄 보이기 */
         #screen-timer.is-paused .vcr-horizontal-noise { display: block; }
 
         /* 일시정지 백그라운드 노이즈 텍스처 (기본 잔잔한 노이즈) */
@@ -174,18 +173,17 @@
     <!-- CRT 스캔라인 오버레이 -->
     <div class="crt-overlay"></div>
 
-    <!-- 1. 타이틀 화면 -->
+    <!-- 1. 타이틀 화면 (중앙 정렬 완벽 적용) -->
     <div id="screen-title" class="screen active" style="justify-content: center; align-items: center; text-align: center; cursor: pointer;" onclick="app.playSound('coin'); app.switchScreen('menu')">
-        <div style="text-align:center;">
-            <div class="title-logo vcr-text text-red" style="font-size:4rem; margin-bottom:10px;">REC</div>
-            <div class="title-logo vcr-text" style="font-size:2rem;">INTERVAL TIMER</div>
+        <div>
+            <div class="title-logo vcr-text text-red" style="font-size:4rem; margin-bottom:10px;">WORKREC.</div>
+            <div class="title-logo vcr-text" style="font-size:2rem;">WORKOUT TIMER</div>
         </div>
         <div class="blink text-green" style="font-size: 1.5rem; margin-top: 50px;">TAP TO START</div>
     </div>
 
     <!-- 2. TV 채널 뷰어 화면 -->
     <div id="screen-menu" class="screen">
-        <!-- 배경 GIF 추가 -->
         <img id="menu-bg-gif" class="timer-bg-gif" src="" alt="">
         
         <div class="header"><span>TRACK SELECT</span><span id="menu-time">12:00:00</span></div>
@@ -249,12 +247,10 @@
 
     <!-- 4. 타이머 화면 -->
     <div id="screen-timer" class="screen">
-        <!-- VCR 가로줄 노이즈 레이어 (부모 is-paused 일때만 block 됨) -->
         <div class="vcr-horizontal-noise"></div>
         <div class="pause-static"></div>
         <img id="timer-gif" class="timer-bg-gif" src="" alt="">
         
-        <!-- 글리치와 흔들림 효과가 적용되는 콘텐츠 영역 -->
         <div id="timer-content" class="vcr-play-mild" style="display:flex; flex-direction:column; height:100%;">
             <div class="timer-status">
                 <span id="timer-indicator" class="text-red blink">● REC</span>
@@ -305,7 +301,9 @@
             
             data: { customChannels: [], logs: [], builderTags: [] },
             menuState: { currentIndex: 0 },
-            timer: { intervalId: null, targetTime: 0, remainingSec: 0, currentRound: 1, state: 'WORK', isPaused: false, activeChannel: null },
+            
+            // 타이머 상태 (READY 추가)
+            timer: { intervalId: null, targetTime: 0, remainingSec: 0, currentRound: 1, state: 'READY', isPaused: false, activeChannel: null },
 
             init() {
                 this.loadData();
@@ -321,7 +319,6 @@
                 } catch(e) {}
             },
 
-            // CRT 브라운관 초기화(디가우싱) 효과 트리거
             triggerDegauss() {
                 document.body.classList.remove('degauss-active');
                 void document.body.offsetWidth; 
@@ -365,6 +362,24 @@
                 return [...this.defaultChannels, ...this.data.customChannels];
             },
 
+            // 채널 전체 소요 시간 계산
+            calculateTotalTime(ch) {
+                let totalSec = 3; // 초기 READY 시간 3초 포함
+                for (let i = 1; i <= ch.sets; i++) {
+                    let ex = ch.playlist[(i - 1) % ch.playlist.length];
+                    if (typeof ex === 'string') ex = { name: ex, work: null, rest: null };
+                    
+                    let w = (ex.work !== null && ex.work !== undefined) ? ex.work : ch.work;
+                    let r = (ex.rest !== null && ex.rest !== undefined) ? ex.rest : ch.rest;
+                    
+                    totalSec += w;
+                    if (i < ch.sets) totalSec += r; // 마지막 세트 종료 후엔 휴식 제외
+                }
+                const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+                const s = (totalSec % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            },
+
             renderMenu() {
                 const channels = this.getAllChannels();
                 if (channels.length === 0) return;
@@ -379,7 +394,6 @@
                 const chId = (this.menuState.currentIndex + 1).toString().padStart(2, '0');
                 const viewer = document.getElementById('channel-viewer');
                 
-                // 메뉴 배경 GIF 설정
                 const menuGifEl = document.getElementById('menu-bg-gif');
                 const targetGifSrc = ch.gif || this.fallbackGif;
                 menuGifEl.src = targetGifSrc;
@@ -392,13 +406,14 @@
                 };
                 menuGifEl.style.display = 'block';
                 
+                const totalTimeStr = this.calculateTotalTime(ch);
+                
                 viewer.innerHTML = `
                     <div class="text-green blink-fast" style="font-size: 1.5rem; position:absolute; top:10px; left:10px;">PLAY ►</div>
                     <div class="text-green" style="font-size: 2.5rem; margin-bottom: 20px;">CH ${chId}</div>
                     <div class="vcr-text text-red" style="font-size: 2.2rem; margin-bottom: 30px; line-height: 1.2;">${ch.name}</div>
                     <div style="font-size: 1.2rem; color: var(--vcr-white); width: 100%; display:flex; justify-content: space-around; margin-bottom: 15px;">
-                        <div><span style="color:#888;">WORK</span><br>${ch.work}s</div>
-                        <div><span style="color:#888;">REST</span><br>${ch.rest}s</div>
+                        <div><span style="color:#888;">TOTAL TIME</span><br>${totalTimeStr}</div>
                     </div>
                     <div style="font-size: 1.5rem; color: var(--vcr-green); border-top: 1px dashed #555; padding-top: 15px; width: 80%;">
                         ${ch.sets} ROUNDS
@@ -423,7 +438,6 @@
             startSelectedChannel() {
                 const channels = this.getAllChannels();
                 if(channels.length > 0) {
-                    this.playSound('start');
                     this.startTimerPrep(channels[this.menuState.currentIndex]);
                 }
             },
@@ -491,7 +505,6 @@
                 this.switchScreen('menu');
             },
 
-            // --- 타이머 코어 로직 ---
             getCurrentExercise() {
                 const ch = this.timer.activeChannel;
                 let currentItem = ch.playlist[(this.timer.currentRound - 1) % ch.playlist.length];
@@ -499,13 +512,14 @@
                 return currentItem;
             },
 
+            // 타이머 준비 시작 (READY 단계로 진입)
             startTimerPrep(channel) {
                 this.timer.activeChannel = channel;
                 this.timer.currentRound = 1;
                 this.timer.isPaused = false;
                 document.getElementById('screen-timer').classList.remove('is-paused');
                 document.getElementById('btn-pause').innerText = '|| PAUSE';
-                this.setTimerState('WORK');
+                this.setTimerState('READY'); // WORK 대신 READY로 세팅
                 this.switchScreen('timer');
                 this.timerLoop();
             },
@@ -523,7 +537,18 @@
                 this.triggerDegauss(); 
                 const currentEx = this.getCurrentExercise();
 
-                if (newState === 'WORK') {
+                if (newState === 'READY') {
+                    this.timer.remainingSec = 3;
+                    
+                    screen.classList.add('blue-screen');
+                    tContent.className = 'vcr-play-mild';
+                    gifEl.style.display = 'none';
+                    
+                    indicator.className = 'text-green blink'; indicator.innerText = 'STANDBY';
+                    stateText.className = 'text-green'; stateText.innerText = 'READY';
+                    timeEl.className = 'timer-time vcr-text text-green';
+
+                } else if (newState === 'WORK') {
                     this.playSound('start');
                     this.timer.remainingSec = currentEx.work !== null && currentEx.work !== undefined ? currentEx.work : ch.work;
                     
@@ -567,6 +592,8 @@
                 
                 if(this.timer.currentRound === ch.sets && this.timer.state === 'WORK') {
                     roundEl.innerText = 'FINAL ROUND'; roundEl.className = 'timer-round text-red blink-fast';
+                } else if (this.timer.state === 'READY') {
+                    roundEl.innerText = `GET READY`; roundEl.className = 'timer-round text-green blink';
                 } else {
                     roundEl.innerText = `ROUND ${this.timer.currentRound.toString().padStart(2,'0')} / ${ch.sets.toString().padStart(2,'0')}`;
                     roundEl.className = 'timer-round text-green';
@@ -579,9 +606,12 @@
                 if(this.timer.state === 'WORK') {
                     document.getElementById('timer-caption-current').innerText = `[ DOING ] ${currentExName}`;
                     document.getElementById('timer-caption-next').innerText = `NEXT: ${nextExName}`;
-                } else {
+                } else if (this.timer.state === 'REST') {
                     document.getElementById('timer-caption-current').innerText = `[ RESTING ]`;
                     document.getElementById('timer-caption-next').innerText = `NEXT UP: ${nextExName}`; 
+                } else if (this.timer.state === 'READY') {
+                    document.getElementById('timer-caption-current').innerText = `[ STANDBY ]`;
+                    document.getElementById('timer-caption-next').innerText = `FIRST UP: ${currentExName}`; 
                 }
             },
 
@@ -594,7 +624,10 @@
                     }
                     this.timer.remainingSec = Math.ceil((this.timer.targetTime - Date.now()) / 1000);
                     
-                    if(this.timer.remainingSec > 0 && this.timer.remainingSec <= 3 && this.timer.state === 'REST') this.playSound('count');
+                    // READY 상태에서도 3초 카운트다운 사운드가 재생되도록 추가
+                    if(this.timer.remainingSec > 0 && this.timer.remainingSec <= 3 && (this.timer.state === 'REST' || this.timer.state === 'READY')) {
+                        this.playSound('count');
+                    }
                     
                     if (this.timer.remainingSec <= 0) {
                         this.timer.remainingSec = 0;
@@ -605,10 +638,12 @@
             },
 
             handlePhaseEnd() {
-                if (this.timer.state === 'WORK') {
+                if (this.timer.state === 'READY') {
+                    this.setTimerState('WORK');
+                } else if (this.timer.state === 'WORK') {
                     if (this.timer.currentRound >= this.timer.activeChannel.sets) this.completeWorkout();
                     else this.setTimerState('REST');
-                } else {
+                } else if (this.timer.state === 'REST') {
                     this.timer.currentRound++;
                     this.setTimerState('WORK');
                 }
@@ -619,12 +654,12 @@
                 const indicator = document.getElementById('timer-indicator');
                 const btnPause = document.getElementById('btn-pause');
                 const tContent = document.getElementById('timer-content');
-                const screen = document.getElementById('screen-timer'); // 추가 및 확인 완료
+                const screen = document.getElementById('screen-timer'); 
                 
                 this.triggerDegauss(); 
                 
                 if(this.timer.isPaused) {
-                    screen.classList.add('is-paused'); // 세로줄 클래스 활성화
+                    screen.classList.add('is-paused'); 
                     indicator.innerText = 'STILL';
                     indicator.classList.remove('blink');
                     screen.classList.add('blue-screen');
@@ -632,7 +667,7 @@
                     btnPause.innerText = '▶ PLAY';
                     tContent.className = 'vcr-pause-heavy'; 
                 } else {
-                    screen.classList.remove('is-paused'); // 세로줄 클래스 비활성화
+                    screen.classList.remove('is-paused'); 
                     btnPause.innerText = '|| PAUSE';
                     
                     if(this.timer.state === 'WORK') {
@@ -641,6 +676,10 @@
                         indicator.classList.add('blink');
                         screen.classList.remove('blue-screen');
                         document.getElementById('timer-gif').style.display = 'block';
+                    } else if (this.timer.state === 'READY') {
+                        tContent.className = 'vcr-play-mild';
+                        indicator.innerText = 'STANDBY';
+                        indicator.classList.add('blink');
                     } else {
                         tContent.className = 'vcr-pause-heavy'; 
                         indicator.innerText = '|| PAUSE';
