@@ -113,6 +113,18 @@ window.VCR_PRESETS = [
             { name: "BACK RUNGE"}
      
         ]
+    }, 
+	{
+        id: "CH06",
+        type: "preset",
+        name: "IT'S BURP TIME!",
+        work: 720,
+        rest: 0,
+        sets: 1,
+        gif: "./gif/patrick.burp.gif",
+        playlist: [
+            { name: "BURP TIME!"}
+        ]
     }
 
 
