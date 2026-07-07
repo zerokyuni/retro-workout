@@ -165,7 +165,7 @@
         .timer-controls { display: flex; justify-content: space-between; margin-top: auto; width: 100%; z-index: 2; }
         
         /* 로그 */
-        #log-textarea { width: 100%; height: 200px; background: #000; color: var(--vcr-green); border: 2px solid var(--vcr-white); font-family: inherit; font-size: 0.8rem; padding: 10px; margin-bottom: 10px; resize: none; }
+        #log-textarea { width: 100%; flex-grow: 1; min-height: 100px; background: #000; color: var(--vcr-green); border: 2px solid var(--vcr-white); font-family: inherit; font-size: 0.8rem; padding: 10px; margin-bottom: 10px; resize: none; }
     </style>
 </head>
 <body>
@@ -275,8 +275,16 @@
 
     <!-- 5. 로그 화면 -->
     <div id="screen-log" class="screen">
-        <div class="header"><span>TAPE LOG ARCHIVE</span></div>
+        <div class="header"><span>TAPE LOG & DATA</span></div>
+        
+        <div style="color:var(--vcr-green); font-size:0.9rem; margin-bottom:5px;">[ MANAGE CUSTOM TRACKS ]</div>
+        <div id="log-custom-list" class="list-container" style="max-height: 120px; border: 1px dashed var(--vcr-white); padding: 5px; margin-bottom: 15px;">
+            <!-- JS로 커스텀 트랙 리스트 렌더링 -->
+        </div>
+
+        <div style="color:var(--vcr-green); font-size:0.9rem; margin-bottom:5px;">[ RAW BACKUP DATA ]</div>
         <textarea id="log-textarea" readonly></textarea>
+        
         <div class="footer">
             <button class="btn" onclick="app.switchScreen('menu')">BACK</button>
             <button class="btn text-green" onclick="app.importData()">RESTORE</button>
@@ -656,7 +664,7 @@
                 const tContent = document.getElementById('timer-content');
                 const screen = document.getElementById('screen-timer'); 
                 
-                this.triggerDegauss(); 
+                // this.triggerDegauss(); 
                 
                 if(this.timer.isPaused) {
                     screen.classList.add('is-paused'); 
@@ -706,7 +714,33 @@
                 this.switchScreen('log');
             },
 
+            // 커스텀 채널 삭제 로직 추가
+            deleteCustomChannel(id) {
+                this.data.customChannels = this.data.customChannels.filter(ch => ch.id !== id);
+                this.saveData();
+                this.renderLog(); // 리스트 갱신
+            },
+
             renderLog() {
+                // 커스텀 채널 리스트 렌더링
+                const listEl = document.getElementById('log-custom-list');
+                listEl.innerHTML = '';
+                if (this.data.customChannels.length === 0) {
+                    listEl.innerHTML = '<div style="padding:10px; color:#888; text-align:center;">NO CUSTOM TRACKS.</div>';
+                } else {
+                    this.data.customChannels.forEach(ch => {
+                        const item = document.createElement('div');
+                        item.className = 'tag-item';
+                        item.style.marginBottom = '5px';
+                        item.innerHTML = `
+                            <span>${ch.name}</span>
+                            <span style="color:var(--vcr-red); cursor:pointer; padding:5px;" onclick="app.deleteCustomChannel('${ch.id}')">[DELETE]</span>
+                        `;
+                        listEl.appendChild(item);
+                    });
+                }
+
+                // 기존 로그 및 백업 데이터 렌더링
                 const ta = document.getElementById('log-textarea');
                 ta.value = "[TAPE LOG ARCHIVE]\n-----------------------------------------\n" +
                            (this.data.logs.length === 0 ? "NO RECORDS FOUND.\n" : this.data.logs.join("\n") + "\n") +
