@@ -11,7 +11,10 @@ window.VCR_PRESETS = [
         sets: 8,
         gif: "./gif/ch01.gif",
         playlist: [
-            { name: "FULL BODY BURST", gif: "./gif/tabata_burst.gif" }
+            { name: "JUMPING JACKS", gif: "./gif/jump.jacks.gif" },
+            { name: "JUMPING BURPEE", gif: "./gif/jump.burp.gif"},
+            { name: "MT.CLIMBER", gif: "./gif/mt.climb.gif" },
+            { name: "SQUAT&JUMP", gif: "./gif/sqrt.jump.gif" }
         ]
     },
     {
