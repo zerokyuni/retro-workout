@@ -9,7 +9,7 @@ window.VCR_PRESETS = [
         work: 20,
         rest: 10,
         sets: 8,
-        gif: "./gif/ch01.gif",
+        gif: "./gif/jump.jacks.gif",
         playlist: [
             { name: "JUMPING JACKS", gif: "./gif/jump.jacks.gif" },
             { name: "JUMPING BURPEE", gif: "./gif/jump.burp.gif"},
