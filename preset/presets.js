@@ -49,17 +49,17 @@ window.VCR_PRESETS = [
         work: 45,
         rest: 3,
         sets: 9,
-        gif: "./gif/4butterfly.gif",
+        gif: "./gif/glu.bridge.hip.abd.gif",
         playlist: [
-            { name: "BUTTERFLY", gif: "./gif/4butterfly.gif", work: 45, rest: 3 },
-            { name: "GLUTE BRIDGE", gif: "./gif/4glu.bridge.gif", work: 45, rest: 3 },
-            { name: "CAT STRETCH", gif: "./gif/4cat.strch.gif" },
-            { name: "PELVIC TILT", gif: "./gif/4pelv.tilt.gif" },
-            { name: "CHILD POSE", gif: "./gif/4child.p.gif" },
-            { name: "FROG CRUNCH", gif: "./gif/4frog.crch.gif" },
-            { name: "BRIDGE HIP.ABD", gif: "./gif/4bridge_hip.abd.gif" },
-            { name: "BENT LEG SIDE.K L", gif: "./gif/4bt.leg_sideK.gif" },
-            { name: "BENT LEG SIDE.K R", gif: "./gif/4bt.leg_sideK.gif" }
+            { name: "BUTTERFLY.FLAPS", gif: "./gif/buttfly.flap.gif", work: 3, rest: 3 },
+            { name: "GLUTE BRIDGE", gif: "./gif/glute.bridge.gif", work: 5, rest: 10 },
+            { name: "CAT STRETCH", gif: "./gif/cat.stretch.gif" },
+            { name: "PELVIC TILT", gif: "./gif/pelvic.tilt.gif" },
+            { name: "CHILD POSE", gif: "./gif/childpose.kneelpu.gif" },
+            { name: "FROG CRUNCH", gif: "./gif/frog.crunch.gif" },
+            { name: "BRIDGE HIP.ABD", gif: "./gif/glu.bridge.hip.abd.gif" },
+            { name: "BENT LEG SIDE.K L", gif: "./gif/bent.leg.sideK.gif" },
+            { name: "BENT LEG SIDE.K R", gif: "./gif/bent.leg.sideK.gif" }
         ]
     }
 
@@ -74,8 +74,8 @@ window.VCR_PRESETS = [
         sets: 5,
         gif: "./gif/ch04.gif",
         playlist: [
-            { name: "CRUNCH", gif: "./gif/crunch.gif" },
-            { name: "PLANK", gif: "./gif/plank.gif" }
+            { name: "CRUNCH", gif: "./gif/crunch.gif", work: 45, rest: 3  },
+            { name: "PLANK", gif: "./gif/plank.gif", work: 45, rest: 3 }
         ]
     }
     */
