@@ -92,7 +92,7 @@ window.VCR_PRESETS = [
         playlist: [
             { name: "PULSE SQUAT (5 TO 1)"},
             { name: "SUMO SQUAT & LUNGE"},
-            { name: "IN&OUT JUMP SQUAT" , rest: 30},
+            { name: "IN & OUT JUMP SQUAT" , rest: 30},
             { name: "SQUAT TO CROSS RUNGE"},
             { name: "BACK RUNGE"},
             { name: "JUMP SQUAT" , rest: 30},
@@ -106,7 +106,7 @@ window.VCR_PRESETS = [
             { name: "SUMO SQUAT & LUNGE"},
             { name: "SQUAT TO CROSS RUNGE" , rest: 30},
             { name: "SUMO SQUAT & LUNGE"},
-            { name: "IN&OUT JUMP SQUAT"},
+            { name: "IN & OUT JUMP SQUAT"},
             { name: "PULSE SQUAT (5 TO 1)" , rest: 30},
             { name: "SIDE SQUAT"},
             { name: "SQUAT TO CROSS RUNGE"},
