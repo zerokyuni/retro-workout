@@ -66,11 +66,11 @@ window.VCR_PRESETS = [
         type: "preset",
         name: "LEG CORE",
         work: 45,
-        rest: 3,
+        rest: 0,
         sets: 9,
         gif: "./gif/glu.bridge.hip.abd.gif",
         playlist: [
-            { name: "BUTTERFLY.FLAPS", gif: "./gif/buttfly.flap.gif"},
+            { name: "BUTTERFLY.FLAPS", gif: "./gif/butterfly.flap.gif"},
             { name: "GLUTE BRIDGE", gif: "./gif/glute.bridge.gif"},
             { name: "CAT STRETCH", gif: "./gif/cat.stretch.gif" },
             { name: "PELVIC TILT", gif: "./gif/pelvic.tilt.gif" },
