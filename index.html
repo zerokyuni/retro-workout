@@ -254,7 +254,8 @@
         <div id="timer-content" class="vcr-play-mild" style="display:flex; flex-direction:column; height:100%;">
             <div class="timer-status">
                 <span id="timer-indicator" class="text-red blink">● REC</span>
-                <span id="timer-battery">[||||]</span>
+                <!-- 배터리 대신 진행률 트래커로 교체 -->
+                <span id="timer-progress" style="color: var(--vcr-white);">[----------]</span>
             </div>
             <div class="timer-center">
                 <div id="timer-round" class="timer-round">ROUND 01/05</div>
@@ -370,8 +371,8 @@
                 return [...this.defaultChannels, ...this.data.customChannels];
             },
 
-            // 채널 전체 소요 시간 계산
-            calculateTotalTime(ch) {
+            // 채널 전체 소요 시간 (초 단위) 계산 분리
+            calculateTotalSeconds(ch) {
                 let totalSec = 3; // 초기 READY 시간 3초 포함
                 for (let i = 1; i <= ch.sets; i++) {
                     let ex = ch.playlist[(i - 1) % ch.playlist.length];
@@ -383,6 +384,12 @@
                     totalSec += w;
                     if (i < ch.sets) totalSec += r; // 마지막 세트 종료 후엔 휴식 제외
                 }
+                return totalSec;
+            },
+
+            // 렌더링용 채널 전체 소요 시간 (MM:SS) 포맷팅
+            calculateTotalTime(ch) {
+                const totalSec = this.calculateTotalSeconds(ch);
                 const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
                 const s = (totalSec % 60).toString().padStart(2, '0');
                 return `${m}:${s}`;
@@ -620,6 +627,49 @@
                 } else if (this.timer.state === 'READY') {
                     document.getElementById('timer-caption-current').innerText = `[ STANDBY ]`;
                     document.getElementById('timer-caption-next').innerText = `FIRST UP: ${currentExName}`; 
+                }
+
+                // 전체 운동 진행률 트래커 업데이트 로직
+                const totalSec = this.calculateTotalSeconds(ch);
+                let passedSec = 0;
+                
+                if (this.timer.state === 'READY') {
+                    passedSec = 3 - this.timer.remainingSec;
+                } else {
+                    passedSec += 3; // READY 3초 완료됨
+                    // 지나간 라운드들 시간 합산
+                    for (let i = 1; i < this.timer.currentRound; i++) {
+                        let ex = ch.playlist[(i - 1) % ch.playlist.length];
+                        if (typeof ex === 'string') ex = { name: ex, work: null, rest: null };
+                        let w = (ex.work !== null && ex.work !== undefined) ? ex.work : ch.work;
+                        let r = (ex.rest !== null && ex.rest !== undefined) ? ex.rest : ch.rest;
+                        passedSec += (w + r);
+                    }
+                    
+                    // 현재 라운드 진행 중인 시간 합산
+                    let currentEx = this.getCurrentExercise();
+                    let w = (currentEx.work !== null && currentEx.work !== undefined) ? currentEx.work : ch.work;
+                    
+                    if (this.timer.state === 'WORK') {
+                        passedSec += (w - this.timer.remainingSec);
+                    } else if (this.timer.state === 'REST') {
+                        passedSec += w; // 현재 라운드 운동은 완료됨
+                        let r = (currentEx.rest !== null && currentEx.rest !== undefined) ? currentEx.rest : ch.rest;
+                        passedSec += (r - this.timer.remainingSec);
+                    }
+                }
+
+                // 진행률 UI 렌더링 (10칸 트래커)
+                const progressEl = document.getElementById('timer-progress');
+                if (progressEl && totalSec > 0) {
+                    const trackLength = 10;
+                    let pos = Math.floor((passedSec / totalSec) * trackLength);
+                    if (pos >= trackLength) pos = trackLength - 1;
+                    if (pos < 0) pos = 0;
+                    
+                    let trackArr = Array(trackLength).fill('-');
+                    trackArr[pos] = '*'; // 현재 위치 마킹
+                    progressEl.innerText = `[${trackArr.join('')}]`;
                 }
             },
 
