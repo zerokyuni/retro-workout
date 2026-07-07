@@ -20,13 +20,21 @@ window.VCR_PRESETS = [
     {
         id: "CH02",
         type: "preset",
-        name: "HEAVY JUMP ROPE",
-        work: 60,
+        name: "INTERVAL JUMP ROPE",
+        work: 90,
         rest: 30,
         sets: 10,
-        gif: "./gif/ch02.gif",
+        gif: "./gif/jump.rope.gif",
         playlist: [
-            { name: "JUMP ROPE", gif: "./gif/jumprope.gif" }
+            { name: "WARMING UP", work: 180, rest: 5}
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
+            { name: "COOL DOWN", work: 300, rest: 5}
         ]
     },
     {
