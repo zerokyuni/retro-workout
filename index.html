@@ -619,7 +619,7 @@
                 const nextExName = this.timer.currentRound < ch.sets ? (typeof nextItem === 'string' ? nextItem : nextItem.name) : "NONE";
 
                 if(this.timer.state === 'WORK') {
-                    document.getElementById('timer-caption-current').innerText = `[ DOING ] ${currentExName}`;
+                    document.getElementById('timer-caption-current').innerText = `[ NOW ] ${currentExName}`;
                     document.getElementById('timer-caption-next').innerText = `NEXT: ${nextExName}`;
                 } else if (this.timer.state === 'REST') {
                     document.getElementById('timer-caption-current').innerText = `[ RESTING ]`;
