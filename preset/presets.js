@@ -42,7 +42,7 @@ window.VCR_PRESETS = [
         type: "preset",
         name: "ABS CRUNCH",
         work: 30,
-        rest: 1,
+        rest: 0,
         sets: 13,
         gif: "./gif/crunch.gif",
         playlist: [
@@ -86,7 +86,7 @@ window.VCR_PRESETS = [
         type: "preset",
         name: "LEG BREAKER(WIP)",
         work: 30,
-        rest: 1,
+        rest: 0,
         sets: 21,
         gif: "./gif/ch05.gif",
         playlist: [
