@@ -70,8 +70,8 @@ window.VCR_PRESETS = [
         sets: 9,
         gif: "./gif/glu.bridge.hip.abd.gif",
         playlist: [
-            { name: "BUTTERFLY.FLAPS", gif: "./gif/buttfly.flap.gif", work: 3, rest: 3 },
-            { name: "GLUTE BRIDGE", gif: "./gif/glute.bridge.gif", work: 5, rest: 10 },
+            { name: "BUTTERFLY.FLAPS", gif: "./gif/buttfly.flap.gif"},
+            { name: "GLUTE BRIDGE", gif: "./gif/glute.bridge.gif"},
             { name: "CAT STRETCH", gif: "./gif/cat.stretch.gif" },
             { name: "PELVIC TILT", gif: "./gif/pelvic.tilt.gif" },
             { name: "CHILD POSE", gif: "./gif/childpose.kneelpu.gif" },
@@ -79,6 +79,39 @@ window.VCR_PRESETS = [
             { name: "BRIDGE HIP.ABD", gif: "./gif/glu.bridge.hip.abd.gif" },
             { name: "BENT LEG SIDE.K L", gif: "./gif/bent.leg.sideK.gif" },
             { name: "BENT LEG SIDE.K R", gif: "./gif/bent.leg.sideK.gif" }
+        ]
+    }, 
+	{
+        id: "CH05",
+        type: "preset",
+        name: "LEG BREAKER(WIP)",
+        work: 30,
+        rest: 1,
+        sets: 21,
+        gif: "./gif/ch05.gif",
+        playlist: [
+            { name: "PULSE SQUAT (5 TO 1)"},
+            { name: "SUMO SQUAT & LUNGE"},
+            { name: "IN&OUT JUMP SQUAT" , rest: 30},
+            { name: "SQUAT TO CROSS RUNGE"},
+            { name: "BACK RUNGE"},
+            { name: "JUMP SQUAT" , rest: 30},
+            { name: "PULSE LUNGE L"},
+            { name: "PULSE LUNGE R"},
+            { name: "WIDE SQUAT & CARP RAISE" , rest: 30},
+            { name: "SQUAT TO CROSS RUNGE"},
+            { name: "BACK RUNGE"},
+            { name: "PULSE WIDE SQUAT", rest: 30},
+            { name: "PULSE SQUAT (5 TO 1)"},
+            { name: "SUMO SQUAT & LUNGE"},
+            { name: "SQUAT TO CROSS RUNGE" , rest: 30},
+            { name: "SUMO SQUAT & LUNGE"},
+            { name: "IN&OUT JUMP SQUAT"},
+            { name: "PULSE SQUAT (5 TO 1)" , rest: 30},
+            { name: "SIDE SQUAT"},
+            { name: "SQUAT TO CROSS RUNGE"},
+            { name: "BACK RUNGE"}
+     
         ]
     }
 
