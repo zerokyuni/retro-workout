@@ -40,17 +40,28 @@ window.VCR_PRESETS = [
     {
         id: "CH03",
         type: "preset",
-        name: "BOXING ROUND",
-        work: 180,
-        rest: 60,
-        sets: 12,
-        gif: "./gif/ch03.gif",
+        name: "ABS CRUNCH",
+        work: 30,
+        rest: 1,
+        sets: 13,
+        gif: "./gif/crunch.gif",
         playlist: [
-            { name: "SHADOW BOXING", gif: "./gif/boxing.gif" }
+            { name: "LEG RAISE", gif: "./gif/lying.leg.raise.gif" },
+            { name: "LEG.HIP RAISE", gif: "./gif/leg.raise.hip.lift.gif" },
+            { name: "REV.CRUNCH", gif: "./gif/reverse.crunch.gif" , rest: 30},
+            { name: "RUSSIAN TWIST", gif: "./gif/russian.twist.gif" },
+            { name: "SIDE CRUNCH L", gif: "./gif/side.crunch.gif" },
+            { name: "SIDE CRUNCH R", gif: "./gif/side.crunch.gif" },
+            { name: "HEEL TOUCH", gif: "./gif/heel.touch.crunch.gif" , rest: 30},
+            { name: "CRUNCH", gif: "./gif/crunch.gif" },
+            { name: "KNEE TOUCH", gif: "./gif/knee.touch.crunch.gif" },
+            { name: "TWIST CRUNCH", gif: "./gif/air.twist.crunch.gif" , rest: 30},
+            { name: "FOREARM PUSHUP", gif: "./gif/elbow.updown.plank.gif" },
+            { name: "SIDE PLANK UP", gif: "./gif/side.plank.rot.gif" },
+            { name: "PLANK KNEE UP", gif: "./gif/elbow.knee.touch.gif" }
         ]
-    }
-    
-    , {
+    }, 
+	{
         id: "CH04",
         type: "preset",
         name: "LEG CORE",
