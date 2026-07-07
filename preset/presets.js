@@ -37,18 +37,19 @@ window.VCR_PRESETS = [
         playlist: [
             { name: "SHADOW BOXING", gif: "./gif/boxing.gif" }
         ]
-    }, 
-    {
+    }
+    
+    , {
         id: "CH04",
         type: "preset",
         name: "LEG CORE",
         work: 45,
         rest: 3,
         sets: 9,
-        gif: "./gif/ch04.gif",
+        gif: "./gif/4butterfly.gif",
         playlist: [
-            { name: "BUTTERFLY", gif: "./gif/4butterfly.gif" },
-            { name: "GLUTE BRIDGE", gif: "./gif/4glu.bridge.gif" },
+            { name: "BUTTERFLY", gif: "./gif/4butterfly.gif", work: 45, rest: 3 },
+            { name: "GLUTE BRIDGE", gif: "./gif/4glu.bridge.gif", work: 45, rest: 3 },
             { name: "CAT STRETCH", gif: "./gif/4cat.strch.gif" },
             { name: "PELVIC TILT", gif: "./gif/4pelv.tilt.gif" },
             { name: "CHILD POSE", gif: "./gif/4child.p.gif" },
@@ -58,6 +59,8 @@ window.VCR_PRESETS = [
             { name: "BENT LEG SIDE.K R", gif: "./gif/4bt.leg_sideK.gif" }
         ]
     }
+
+
     /* 새로운 프리셋을 추가하려면 아래 형식을 복사해서 붙여넣으세요!
     , {
         id: "CH04",
