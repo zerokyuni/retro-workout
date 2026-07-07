@@ -175,12 +175,12 @@
     <div class="crt-overlay"></div>
 
     <!-- 1. 타이틀 화면 -->
-    <div id="screen-title" class="screen active" onclick="app.playSound('coin'); app.switchScreen('menu')">
+    <div id="screen-title" class="screen active" style="justify-content: center; align-items: center; text-align: center; cursor: pointer;" onclick="app.playSound('coin'); app.switchScreen('menu')">
         <div style="text-align:center;">
-            <div class="title-logo vcr-text text-red" style="font-size:3rem; margin-bottom:10px;">REC</div>
-            <div class="title-logo vcr-text">INTERVAL TIMER</div>
+            <div class="title-logo vcr-text text-red" style="font-size:4rem; margin-bottom:10px;">REC</div>
+            <div class="title-logo vcr-text" style="font-size:2rem;">INTERVAL TIMER</div>
         </div>
-        <div class="blink text-green" style="font-size: 1.5rem; margin-top: 50px;">> TAP TO START</div>
+        <div class="blink text-green" style="font-size: 1.5rem; margin-top: 50px;">TAP TO START</div>
     </div>
 
     <!-- 2. TV 채널 뷰어 화면 -->
@@ -581,7 +581,7 @@
                     document.getElementById('timer-caption-next').innerText = `NEXT: ${nextExName}`;
                 } else {
                     document.getElementById('timer-caption-current').innerText = `[ RESTING ]`;
-                    document.getElementById('timer-caption-next').innerText = `NEXT UP: ${currentExName}`; 
+                    document.getElementById('timer-caption-next').innerText = `NEXT UP: ${nextExName}`; 
                 }
             },
 
