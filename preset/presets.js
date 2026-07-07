@@ -23,17 +23,17 @@ window.VCR_PRESETS = [
         name: "INTERVAL JUMP ROPE",
         work: 90,
         rest: 30,
-        sets: 10,
+        sets: 9,
         gif: "./gif/jump.rope.gif",
         playlist: [
-            { name: "WARMING UP", work: 180, rest: 5}
-            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
-            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
-            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
-            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
-            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
-            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
-            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" }
+            { name: "WARMING UP", work: 180, rest: 5},
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
+            { name: "JUMP ROPE", gif: "./gif/jump.rope.gif" },
             { name: "COOL DOWN", work: 300, rest: 5}
         ]
     },
