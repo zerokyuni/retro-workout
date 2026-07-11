@@ -125,7 +125,19 @@ window.VCR_PRESETS = [
         playlist: [
             { name: "BURP TIME!"}
         ]
-    }
+    }, 
+	{
+        id: "CH07",
+        type: "preset",
+        name: "PUSH PUSH UP UP",
+        work: 30,
+        rest: 30,
+        sets: 5,
+        gif: "./gif/pushup.deep.gif",
+        playlist: [
+            { name: "PUSH UP!"}
+        ]
+	}
 
 
     /* 새로운 프리셋을 추가하려면 아래 형식을 복사해서 붙여넣으세요!
